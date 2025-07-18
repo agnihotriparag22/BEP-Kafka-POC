@@ -1,21 +1,27 @@
 import random
 from faker import Faker
 from faker.providers import DynamicProvider
-from app.constant.event_constants import EVENT_TYPES, all_event_names
+from app.constant.event_constants import EVENT_TYPES, EVENT_SENDERS, EVENT_TENANTS
 
 fake = Faker()
 
-event_type_provider = DynamicProvider(
-    provider_name="event_type",
-    elements=list(EVENT_TYPES.keys()),
+entity_types = list(EVENT_TYPES.keys())
+
+# Providers for event_name and entity_type
+entity_type_provider = DynamicProvider(
+    provider_name="entity_type",
+    elements=entity_types,
 )
+
+# Flatten all event names for provider
+all_event_names = [name for names in EVENT_TYPES.values() for name in names]
 
 event_name_provider = DynamicProvider(
     provider_name="event_name",
     elements=all_event_names,
 )
 
-fake.add_provider(event_type_provider)
+fake.add_provider(entity_type_provider)
 fake.add_provider(event_name_provider)
 
 def generate_policy_details():
@@ -66,31 +72,42 @@ def generate_claim_details():
         ],
     }
 
-def generate_payment_details():
+def generate_document_details():
     return {
-        "payment_id": fake.uuid4(),
-        "payment_method": fake.random_element(elements=["credit_card", "bank_transfer", "paypal", "cash"]),
-        "payment_status": fake.random_element(elements=["pending", "completed", "failed", "refunded"]),
-        "amount": fake.pydecimal(left_digits=4, right_digits=2, positive=True),
+        "document_id": fake.uuid4(),
+        "document_type": fake.random_element(elements=["pdf", "image", "text", "spreadsheet"]),
+        "uploaded_by": fake.name(),
+        "uploaded_at": fake.date_time_this_year(),
+        "status": fake.random_element(elements=["uploaded", "verified", "shared", "deleted"]),
+    }
+
+def generate_account_details():
+    return {
+        "account_id": fake.uuid4(),
+        "account_type": fake.random_element(elements=["savings", "checking", "credit", "loan"]),
+        "account_status": fake.random_element(elements=["active", "suspended", "closed", "reactivated"]),
+        "opened_date": fake.date_between(start_date="-5y", end_date="now"),
+        "balance": fake.pydecimal(left_digits=6, right_digits=2, positive=True),
         "currency": fake.currency_code(),
-        "transaction_id": fake.uuid4(),
-        "payment_date": fake.date_time_this_year(),
-        "recipient": {
-            "recipient_id": fake.uuid4(),
-            "recipient_name": fake.name(),
-            "recipient_account": fake.iban(),
-        },
-        "fees": {
-            "processing_fee": fake.pydecimal(left_digits=2, right_digits=2, positive=True),
-            "service_fee": fake.pydecimal(left_digits=2, right_digits=2, positive=True),
-        },
+    }
+
+def generate_user_details():
+    return {
+        "user_id": fake.uuid4(),
+        "username": fake.user_name(),
+        "email": fake.email(),
+        "registered_at": fake.date_time_between(start_date="-3y", end_date="now"),
+        "status": fake.random_element(elements=["active", "locked", "deleted"]),
+        "role": fake.job(),
     }
 
 def generate_event_data():
     event_data = []
-    for _ in range(10000):
-        event_type = fake.event_type()
-        event_name = fake.random_element(elements=EVENT_TYPES[event_type])
+    for _ in range(1):
+        entity_type = fake.entity_type()
+        event_name = fake.random_element(elements=EVENT_TYPES[entity_type])
+        event_sender = random.choice(EVENT_SENDERS)
+        event_tenant = random.choice(EVENT_TENANTS)
         event_id = fake.uuid4()
         event_timestamp = fake.date_time_between(start_date="-1y", end_date="now")
         event_user_id = fake.uuid4()
@@ -114,7 +131,8 @@ def generate_event_data():
         event_user_last_login = fake.date_time_between(start_date="-2y", end_date="now")
         event_user_status = fake.random_element(elements=["active", "inactive", "locked", "pending"])
         event_metadata = {
-            "source": fake.random_element(elements=["web", "mobile", "api", "batch"]),
+            "source": event_sender,
+            "tenant": event_tenant,
             "correlation_id": fake.uuid4(),
             "request_id": fake.uuid4(),
             "received_at": fake.date_time_between(start_date="-1y", end_date="now"),
@@ -123,18 +141,26 @@ def generate_event_data():
             "tags": fake.words(nb=random.randint(2, 5)),
             "version": fake.random_element(elements=["v1", "v2", "v3"]),
         }
-        # Nested event details based on type
-        if event_type == "policy":
+        # Nested event details based on entity type
+        if entity_type == "Policy":
             event_details = generate_policy_details()
-        elif event_type == "claim":
+        elif entity_type == "Claim":
             event_details = generate_claim_details()
+        elif entity_type == "Document":
+            event_details = generate_document_details()
+        elif entity_type == "Account":
+            event_details = generate_account_details()
+        elif entity_type == "User":
+            event_details = generate_user_details()
         else:
-            event_details = generate_payment_details()
+            event_details = {}
 
         event_data.append({
             "event_id": event_id,
-            "event_type": event_type,
+            "event_type": entity_type,
             "event_name": event_name,
+            "event_sender": event_sender,
+            "event_tenant": event_tenant,
             "event_timestamp": event_timestamp.isoformat(),
             "event_user": {
                 "user_id": event_user_id,

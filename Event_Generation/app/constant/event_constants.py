@@ -1,14 +1,40 @@
 EVENT_TYPES = {
-    "policy": [
-        "policy_created", "policy_updated", "policy_deleted", "policy_renewed", "policy_expired", "policy_suspended"
+    "Policy": [
+        "AONE.Completed",
+        "AONE.Initiated",
+        "AONE.Updated",
+        "AONE.Cancelled",
+        "AONE.Renewed"
     ],
-    "claim": [
-        "claim_created", "claim_updated", "claim_deleted", "claim_approved", "claim_rejected", "claim_reviewed"
+    "User": [
+        "BTWO.Initiated",
+        "BTWO.Registered",
+        "BTWO.Updated",
+        "BTWO.Deleted",
+        "BTWO.Locked"
     ],
-    "payment": [
-        "payment_created", "payment_updated", "payment_deleted", "payment_processed", "payment_failed", "payment_refunded"
+    "Claim": [
+        "CTHREE.Failed",
+        "CTHREE.Submitted",
+        "CTHREE.Approved",
+        "CTHREE.Rejected",
+        "CTHREE.Closed"
+    ],
+    "Document": [
+        "DFOUR.Updated",
+        "DFOUR.Uploaded",
+        "DFOUR.Deleted",
+        "DFOUR.Verified",
+        "DFOUR.Shared"
+    ],
+    "Account": [
+        "EFIVE.Created",
+        "EFIVE.Updated",
+        "EFIVE.Deleted",
+        "EFIVE.Suspended",
+        "EFIVE.Reactivated"
     ]
 }
 
-# Flatten all event names for provider
-all_event_names = [name for names in EVENT_TYPES.values() for name in names] 
+EVENT_SENDERS = ['MS', 'PORTAL', 'API', 'SYSTEM', 'USER']
+EVENT_TENANTS = ['TDB', 'TST', 'PRD', 'DEV', 'QA'] 
