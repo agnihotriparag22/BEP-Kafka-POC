@@ -103,7 +103,7 @@ def generate_user_details():
 
 def generate_event_data():
     event_data = []
-    for _ in range(100):
+    for _ in range(2):
         entity_type = fake.entity_type()
         event_name = fake.random_element(elements=EVENT_TYPES[entity_type])
         event_sender = random.choice(EVENT_SENDERS)
