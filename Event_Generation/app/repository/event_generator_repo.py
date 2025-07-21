@@ -101,13 +101,53 @@ def generate_user_details():
         "role": fake.job(),
     }
 
+# 25 aggregate_id combinations from governance table
+AGGREGATE_IDS = [
+    "QA#API#AONE.Cancelled",
+    "QA#PORTAL#DFOUR.Deleted",
+    "TDB#SYSTEM#EFIVE.Updated",
+    "TST#USER#BTWO.Updated",
+    "TST#API#DFOUR.Shared",
+    "DEV#PORTAL#AONE.Initiated",
+    "TDB#SYSTEM#DFOUR.Verified",
+    "TDB#USER#EFIVE.Created",
+    "TST#MS#EFIVE.Deleted",
+    "PRD#SYSTEM#DFOUR.Uploaded",
+    "TST#API#BTWO.Locked",
+    "TDB#MS#CTHREE.Closed",
+    "TST#USER#EFIVE.Reactivated",
+    "QA#USER#AONE.Completed",
+    "QA#API#CTHREE.Approved",
+    "DEV#PORTAL#CTHREE.Submitted",
+    "PRD#MS#DFOUR.Updated",
+    "DEV#USER#CTHREE.Rejected",
+    "TST#MS#AONE.Updated",
+    "DEV#PORTAL#BTWO.Deleted",
+    "TDB#SYSTEM#EFIVE.Suspended",
+    "DEV#SYSTEM#CTHREE.Failed",
+    "TDB#SYSTEM#AONE.Renewed",
+    "PRD#API#BTWO.Registered",
+    "DEV#SYSTEM#BTWO.Initiated"
+]
+
+# Helper to get event_type from event_name
+EVENT_NAME_TO_TYPE = {ename: etype for etype, enames in EVENT_TYPES.items() for ename in enames}
+
 def generate_event_data():
     event_data = []
-    for _ in range(2):
-        entity_type = fake.entity_type()
-        event_name = fake.random_element(elements=EVENT_TYPES[entity_type])
-        event_sender = random.choice(EVENT_SENDERS)
-        event_tenant = random.choice(EVENT_TENANTS)
+    # 25 aggregate_id events + 5 random
+    pool = AGGREGATE_IDS.copy()
+    
+    for _ in range(5):
+        tenant = random.choice(EVENT_TENANTS)
+        sender = random.choice(EVENT_SENDERS)
+        event_name = random.choice(all_event_names)
+        pool.append(f"{tenant}#{sender}#{event_name}")
+    
+    for _ in range(10):
+        agg_id = random.choice(pool)
+        tenant, sender, event_name = agg_id.split("#")
+        event_type = EVENT_NAME_TO_TYPE.get(event_name, random.choice(entity_types))
         event_id = fake.uuid4()
         event_timestamp = fake.date_time_between(start_date="-1y", end_date="now")
         event_user_id = fake.uuid4()
@@ -131,8 +171,8 @@ def generate_event_data():
         event_user_last_login = fake.date_time_between(start_date="-2y", end_date="now")
         event_user_status = fake.random_element(elements=["active", "inactive", "locked", "pending"])
         event_metadata = {
-            "source": event_sender,
-            "tenant": event_tenant,
+            "source": sender,
+            "tenant": tenant,
             "correlation_id": fake.uuid4(),
             "request_id": fake.uuid4(),
             "received_at": fake.date_time_between(start_date="-1y", end_date="now"),
@@ -142,25 +182,25 @@ def generate_event_data():
             "version": fake.random_element(elements=["v1", "v2", "v3"]),
         }
         # Nested event details based on entity type
-        if entity_type == "Policy":
+        if event_type == "Policy":
             event_details = generate_policy_details()
-        elif entity_type == "Claim":
+        elif event_type == "Claim":
             event_details = generate_claim_details()
-        elif entity_type == "Document":
+        elif event_type == "Document":
             event_details = generate_document_details()
-        elif entity_type == "Account":
+        elif event_type == "Account":
             event_details = generate_account_details()
-        elif entity_type == "User":
+        elif event_type == "User":
             event_details = generate_user_details()
         else:
             event_details = {}
 
         event_data.append({
             "event_id": event_id,
-            "event_type": entity_type,
+            "event_type": event_type,
             "event_name": event_name,
-            "event_sender": event_sender,
-            "event_tenant": event_tenant,
+            "event_sender": sender,
+            "event_tenant": tenant,
             "event_timestamp": event_timestamp.isoformat(),
             "event_user": {
                 "user_id": event_user_id,
