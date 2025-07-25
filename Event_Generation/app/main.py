@@ -2,9 +2,10 @@ import json
 from app.repository.event_generator_repo import generate_event_data
 import requests
 import time
+import datetime
 
 BATCH_SIZE = 10
-TOTAL_EVENTS = 50
+TOTAL_EVENTS = 99
 
 def batch(iterable, n):
     l = len(iterable)
@@ -19,7 +20,7 @@ if __name__ == "__main__":
     all_events = all_events[:TOTAL_EVENTS]
 
     governance_url = "http://localhost:8001/validate-events"  # Assuming governance API runs on 8001
-    event_store_url = "http://localhost:8000/event"
+    event_store_url = "http://localhost:8002/event"
     headers = {"Content-Type": "application/json"}
 
     for i, event_batch in enumerate(batch(all_events, BATCH_SIZE)):
@@ -48,14 +49,18 @@ if __name__ == "__main__":
             aggregate_id = f"{tenant}#{sender}#{event_name}"
             tenant_event_name = f"{tenant}#{sender}.{event_name}"
             published_epoch_time = int(time.time())
-            tenant_aggregate_id = f"{tenant}#{aggregate_id}"
-            event_data = [{event_id: event}]
+            # published_time_utc = datetime.datetime.utcnow().isoformat() + 'Z'
+            tenant_aggregate_id = f"{tenant}#{tenant}#{sender}#{event_name}"
+            # Use the provided structure for the event store
             transformed_events.append({
+                "tenant_aggregate_id": tenant_aggregate_id,
                 "event_id": event_id,
                 "tenant_event_name": tenant_event_name,
+                # "published_time_utc": published_time_utc,
                 "published_epoch_time": published_epoch_time,
-                "tenant_aggregate_id": tenant_aggregate_id,
-                "event_data": event_data
+                "event_data": [
+                    {event_id: event}
+                ]
             })
         if transformed_events:
             store_response = requests.post(event_store_url, data=json.dumps(transformed_events, default=str), headers=headers)
