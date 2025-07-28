@@ -11,13 +11,13 @@ def parse_dynamodb_item(item: Dict[str, Any]) -> Dict[str, Any]:
             type_key = list(value.keys())[0]
             type_value = value[type_key]
             
-            if type_key == 'S':  # String
+            if type_key == 'S':  
                 result[key] = type_value
-            elif type_key == 'N':  # Number
+            elif type_key == 'N':  
                 result[key] = int(type_value) if type_value.isdigit() else float(type_value)
-            elif type_key == 'M':  # Map
+            elif type_key == 'M':  
                 result[key] = parse_dynamodb_item(type_value)
-            elif type_key == 'L':  # List
+            elif type_key == 'L': 
                 result[key] = [parse_dynamodb_item(item) for item in type_value]
             else:
                 result[key] = type_value
@@ -36,19 +36,15 @@ def extract_event_from_dynamodb_stream(stream_record: Dict[str, Any]) -> Optiona
     if 'event_data' not in new_image:
         return None
     
-    # Extract first event from event_data list
+
     event_data_list = new_image['event_data']
     if not event_data_list:
         return None
     
-    # The structure is: event_data[0] has key 'evt-12345' with nested event details
-    # But after parsing, the key becomes 'M' due to DynamoDB structure
-    # We need to get the actual event details from the nested M structure
+
     first_event_wrapper = event_data_list[0]
     
-    # Handle the case where the key is 'M' (from DynamoDB Map type)
     if 'M' in first_event_wrapper:
-        # Get the actual event details from the nested M
         nested_map = first_event_wrapper['M']
         if 'M' in nested_map:
             event_details_raw = nested_map['M']
@@ -56,7 +52,6 @@ def extract_event_from_dynamodb_stream(stream_record: Dict[str, Any]) -> Optiona
         else:
             event_details = parse_dynamodb_item(nested_map)
     else:
-        # Original logic for when structure is different
         event_id = list(first_event_wrapper.keys())[0]
         event_details = first_event_wrapper[event_id]
     

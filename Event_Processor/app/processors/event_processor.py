@@ -35,7 +35,7 @@ class EventProcessor:
             group_id=f'{KAFKA_APPLICATION_ID}-rules-ktable-builder',
             auto_offset_reset=KAFKA_AUTO_OFFSET_RESET,
             value_deserializer=lambda m: json.loads(m.decode('utf-8')) if m is not None else None,
-            consumer_timeout_ms=5000  # Timeout to avoid infinite loop
+            consumer_timeout_ms=5000  
         )
         
         partitions = consumer.partitions_for_topic(FILTER_RULES_TOPIC)
