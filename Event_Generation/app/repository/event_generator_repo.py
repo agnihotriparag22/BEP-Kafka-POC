@@ -175,6 +175,11 @@ def generate_event_data():
             "tenant": tenant,
             "correlation_id": fake.uuid4(),
             "request_id": fake.uuid4(),
+            "flags": {
+                "partner_events_notification": fake.random_element(elements=["true", "false"]),
+                "policyholder_portal_notification": fake.random_element(elements=["true", "false"]),
+                "policyholder_portal_notification": fake.random_element(elements=["true", "false"])
+                },
             "received_at": fake.date_time_between(start_date="-1y", end_date="now"),
             "processed_at": fake.date_time_between(start_date="-1y", end_date="now"),
             "priority": fake.random_element(elements=["low", "medium", "high"]),
