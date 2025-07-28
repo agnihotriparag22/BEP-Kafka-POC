@@ -1,15 +1,31 @@
 import json
 from app.repository.event_generator_repo import generate_event_data
+import requests
+import time
+
+BATCH_SIZE = 10
+TOTAL_EVENTS = 99
+
+def batch(iterable, n):
+    l = len(iterable)
+    for ndx in range(0, l, n):
+        yield iterable[ndx:min(ndx + n, l)]
 
 if __name__ == "__main__":
+    # Generate 150 events
+    all_events = []
+    while len(all_events) < TOTAL_EVENTS:
+        all_events.extend(generate_event_data())
+    all_events = all_events[:TOTAL_EVENTS]
 
-    # Code to create a json file of events in Event_Generation folder 
-    # comment out the below code to not create a file.
+    event_store_url = "http://localhost:8000/event"
+    headers = {"Content-Type": "application/json"}
 
-    # event = generate_event_data()
-    
-    # with open("generated_event.json", "w") as f:
-    #     json.dump(event, f, indent=2, default=str)
-    
-    # Un-Comment the below line to see the result on terminal
-    print(json.dumps(generate_event_data(), indent=2, default=str))
+    for i, event_batch in enumerate(batch(all_events, BATCH_SIZE)):
+        print(f"\nSending batch {i+1} to Event Store API")
+        store_response = requests.post(event_store_url, data=json.dumps(event_batch, default=str), headers=headers)
+        print(f"Store response: {store_response.status_code}")
+        try:
+            print("Store response JSON:", store_response.json())
+        except Exception:
+            print("Store response Text:", store_response.text)
