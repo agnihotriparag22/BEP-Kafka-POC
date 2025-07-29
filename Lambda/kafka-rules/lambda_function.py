@@ -15,12 +15,11 @@ KAFKA_BOOTSTRAP_SERVERS = os.environ.get('KAFKA_BOOTSTRAP_SERVERS')
 KAFKA_TOPIC = os.environ.get('KAFKA_TOPIC', 'event-rules')
 
 
-def publish_to_kafka(producer, topic, data):
+def publish_to_kafka_with_key(producer, topic, key, data):
     try:
-        # The data is a Python object (e.g., list or dict); value_serializer handles JSON serialization
-        producer.send(topic, value=data)
+        producer.send(topic, key=key.encode('utf-8'), value=data)
         producer.flush()
-        logger.info(f"Successfully published message to Kafka topic {topic}")
+        logger.info(f"Successfully published message to Kafka topic {topic} with key {key}")
     except KafkaError as e:
         logger.error(f"Failed to publish to Kafka: {str(e)}")
         raise
@@ -67,12 +66,14 @@ def lambda_handler(event, context):
                 
                 try:
                     json_data = json.loads(data)
-                    # Handle JSON arrays by publishing each item separately
+                    # Handle JSON arrays by publishing each item with keys for KTable
                     if isinstance(json_data, list):
-                        for item in json_data:
-                            publish_to_kafka(producer, KAFKA_TOPIC, item)
+                        for i, item in enumerate(json_data):
+                            rule_key = f"rule-{i}"
+                            publish_to_kafka_with_key(producer, KAFKA_TOPIC, rule_key, item)
                     else:
-                        publish_to_kafka(producer, KAFKA_TOPIC, json_data)
+                        # Single rule with default key
+                        publish_to_kafka_with_key(producer, KAFKA_TOPIC, "rule-0", json_data)
                     logger.info(f"Successfully processed S3 object: s3://{bucket}/{key}")
                 except json.JSONDecodeError:
                     logger.error(f"S3 object content is not valid JSON: s3://{bucket}/{key}")

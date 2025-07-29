@@ -9,24 +9,22 @@ class EventMetadata(BaseModel):
     source: str
     timestamp: str
     flags: Dict[str, Any] = Field(default_factory=dict)
-    # Additional metadata fields can be added as needed
 
 
 class DynamoDBEvent(BaseModel):
     """Model representing an event from DynamoDB Streams"""
     metadata: EventMetadata
-    payload: Dict[str, Any]
 
 
 class FilterRule(BaseModel):
     """Model representing a filter rule"""
-    attribute_path: str  # Path to the attribute in event metadata (e.g., "metadata.flags.is_priority")
-    value: Any  # Value to compare against
-    target_topic: str  # Topic to route the event to if rule matches
+    attribute_path: str  
+    value: Any  
+    target_topic: str  
     
     def evaluate(self, event: DynamoDBEvent) -> bool:
         """Evaluate if the event matches this rule"""
-        # Navigate to the attribute using the path
+
         parts = self.attribute_path.split('.')
         current = event.model_dump()
         
@@ -42,5 +40,4 @@ class FilterRule(BaseModel):
             else:
                 return False
         
-        # Simple equality check
         return current == self.value

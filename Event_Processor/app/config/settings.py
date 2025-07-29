@@ -2,10 +2,9 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Load environment variables from .env file in project root
+
 env_path = Path(__file__).parent.parent.parent / '.env'
 load_dotenv(dotenv_path=env_path)
-# Fallback: try loading from current directory
 load_dotenv()
 
 # Kafka configuration
@@ -18,5 +17,5 @@ DYNAMODB_EVENTS_TOPIC = os.getenv("DYNAMODB_EVENTS_TOPIC", "dynamodb-events")
 FILTER_RULES_TOPIC = os.getenv("FILTER_RULES_TOPIC", "filter-rules")
 OUTPUT_TOPIC_PREFIX = os.getenv("OUTPUT_TOPIC_PREFIX", "filtered-events-")
 
-# Debug print
+
 print(f"Kafka Bootstrap Servers: {KAFKA_BOOTSTRAP_SERVERS}")
