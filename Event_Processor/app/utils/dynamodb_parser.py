@@ -27,23 +27,24 @@ def parse_dynamodb_item(item: Dict[str, Any]) -> Dict[str, Any]:
     return result
 
 def extract_event_from_dynamodb_stream(stream_record: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    """Extract event data from DynamoDB stream record"""
-    if 'dynamodb' not in stream_record or 'NewImage' not in stream_record['dynamodb']:
+    # Accept both full stream record and just NewImage
+    if 'dynamodb' in stream_record and 'NewImage' in stream_record['dynamodb']:
+        new_image = parse_dynamodb_item(stream_record['dynamodb']['NewImage'])
+    elif 'event_id' in stream_record and 'event_data' in stream_record:
+        # Looks like a NewImage dict directly
+        new_image = parse_dynamodb_item(stream_record)
+    else:
         return None
-    
-    new_image = parse_dynamodb_item(stream_record['dynamodb']['NewImage'])
-    
+
     if 'event_data' not in new_image:
         return None
-    
 
     event_data_list = new_image['event_data']
     if not event_data_list:
         return None
-    
 
     first_event_wrapper = event_data_list[0]
-    
+
     if 'M' in first_event_wrapper:
         nested_map = first_event_wrapper['M']
         if 'M' in nested_map:
@@ -54,7 +55,7 @@ def extract_event_from_dynamodb_stream(stream_record: Dict[str, Any]) -> Optiona
     else:
         event_id = list(first_event_wrapper.keys())[0]
         event_details = first_event_wrapper[event_id]
-    
+
     # Transform to expected format with proper string conversion
     return {
         "metadata": {
