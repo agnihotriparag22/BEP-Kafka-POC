@@ -22,16 +22,25 @@ def validate_event(event):
         elif cache_stats_after.misses > cache_stats_before.misses:
             print((f"Cache miss: aggregate_id '{aggregate_id}' not present in cache. Queried DB and cached result: {exists}"))
             logger.info(f"Cache miss: aggregate_id '{aggregate_id}' not present in cache. Queried DB and cached result: {exists}")
-        if exists:
-            print((f"Aggregate ID '{aggregate_id}' exists."))
-            logger.info(f"Aggregate ID '{aggregate_id}' exists.")
-        else:
-            print((f"Aggregate ID '{aggregate_id}' not found for event: {event}"))
-            logger.warning(f"Aggregate ID '{aggregate_id}' not found for event: {event}")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Aggregate ID '{aggregate_id}' does not exist."
-            )
+        try:
+            if exists:
+                print(f"Aggregate ID '{aggregate_id}' exists.")
+                logger.info(f"Aggregate ID '{aggregate_id}' exists.")
+            else:
+                msg = f"Aggregate ID '{aggregate_id}' not found for event: {event}"
+                print(msg)
+                logger.warning(msg)
+                # Gracefully raise HTTPException for not found, with clear message
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=msg
+                )
+        except Exception as e:
+            msg = f"Exception occurred during aggregate ID validation: {str(e)}"
+            print(msg)
+            logger.error(msg)
+            # Gracefully handle exception without traceback
+            return False
         return True
     except HTTPException as http_exc:
         logger.error(f"HTTPException during event validation: {http_exc.detail}")
