@@ -3,8 +3,8 @@ from app.repository.event_generator_repo import generate_event_data
 import requests
 import time
 
-BATCH_SIZE = 10
-TOTAL_EVENTS = 99
+BATCH_SIZE = 4
+TOTAL_EVENTS = 10
 
 def batch(iterable, n):
     l = len(iterable)

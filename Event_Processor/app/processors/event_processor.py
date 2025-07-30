@@ -106,10 +106,19 @@ class EventProcessor:
             
             event_msgs = events_consumer.poll(timeout_ms=1000, max_records=100)
             
+            # print(event_msgs.items())
+
             for tp, messages in event_msgs.items():
                 logger.info(f"Processing {len(messages)} messages from {tp}")
                 for message in messages:
-                    logger.info(f"Received message: {message.key}")
+                    # Extract event ID from the message value for logging
+                    event_id = "unknown"
+                    try:
+                        if message.value and isinstance(message.value, dict):
+                            event_id = message.value.get('event_id', {}).get('S', 'unknown')
+                    except:
+                        pass
+                    logger.info(f"Received message with event_id: {event_id}")
                     self.join_event_with_filter_rules_ktable(message.value)
     
     def join_event_with_filter_rules_ktable(self, event_data: Dict[str, Any]):

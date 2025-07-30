@@ -18,7 +18,7 @@ def process_events(events: list):
         response = requests.post(
             GOVERNANCE_URL,
             json=[event.dict() if hasattr(event, 'dict') else event for event in events],
-            timeout=10
+            timeout=30
         )
         response.raise_for_status()
         result = response.json()
