@@ -124,22 +124,21 @@ class EventProcessor:
     
 
     def join_event_with_filter_rules_ktable(self, event_data: Dict[str, Any]):
-        """Join stream event with KTable state"""
+        """Join stream event with KTable state and send unmatched events to DLQ"""
         try:
-
             parsed_event = extract_event_from_dynamodb_stream(event_data)
             if not parsed_event:
                 logger.warning("Could not parse DynamoDB stream record")
                 return
-                
+    
             event = DynamoDBEvent(**parsed_event)
             logger.info(f"Joining event {event.metadata.event_id} with filter rules KTable")
             logger.info(f"KTable has {len(self.filter_rules_ktable)} rules")
-            
+    
             if not self.filter_rules_ktable:
                 logger.info("Filter rules KTable empty, skipping event")
                 return
-                
+    
             matches = 0
             for rule in self.filter_rules_ktable.values():
                 logger.info(f"Evaluating rule: {rule.attribute_path} = {rule.value}")
@@ -147,14 +146,22 @@ class EventProcessor:
                     matches += 1
                     self.producer.send(
                         rule.target_topic,
-                        value=event_data  
+                        value=event_data
                     )
                     logger.info(f"Event {event.metadata.event_id} sent to {rule.target_topic} via KTable join")
                 else:
                     logger.info(f"Rule {rule.attribute_path} did not match")
-
+    
+            # DLQ logic: If no rule matched, send to DLQ-topic
+            if matches == 0:
+                self.producer.send(
+                    "DLQ-topic",
+                    value=event_data
+                )
+                logger.info(f"Event {event.metadata.event_id} sent to DLQ-topic (no matching rule)")
+    
             self.producer.flush()
-            
+    
         except Exception as e:
             logger.error(f"Error in KTable stream-table join: {e}")
     
