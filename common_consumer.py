@@ -10,8 +10,8 @@ import logging
 from typing import Optional
 
 # Configuration - UPDATE THESE VALUES
-KAFKA_BROKER_IP = "18.188.188.10:9092"  # Replace with your Kafka broker IP:port
-TOPIC_NAME = "raw-event"      # Replace with your topic name
+KAFKA_BROKER_IP = "3.20.237.63:9092"  
+TOPIC_NAME = "DQL-Topic"    
 
 # Optional configuration
 CONSUMER_GROUP = "my-consumer-group"  # Consumer group ID

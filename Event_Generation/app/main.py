@@ -4,7 +4,7 @@ import requests
 import time
 
 BATCH_SIZE = 4
-TOTAL_EVENTS = 10
+TOTAL_EVENTS = 20
 
 def batch(iterable, n):
     l = len(iterable)

@@ -15,15 +15,18 @@ def process_events(events: list):
     # Forward batch to Governance API for validation
     try:
         logger.info(f"Sending {len(events)} events to Governance API for validation.")
+
         response = requests.post(
             GOVERNANCE_URL,
             json=[event.dict() if hasattr(event, 'dict') else event for event in events],
             timeout=30
         )
+        
         response.raise_for_status()
         result = response.json()
         valid_indices = result.get("valid_indices", [])
         logger.info(f"Received validation result from Governance API: {result}")
+
     except requests.exceptions.Timeout as e:
         logger.error(f"Timeout while connecting to Governance API: {e}")
         raise HTTPException(

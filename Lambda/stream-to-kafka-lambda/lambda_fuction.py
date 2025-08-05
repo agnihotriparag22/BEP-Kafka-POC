@@ -1,8 +1,8 @@
 import json
 from kafka import KafkaProducer, errors as kafka_errors
 
-KAFKA_BROKER = '3.15.46.32:9092'  # Change to your Kafka broker address
-KAFKA_TOPIC = 'raw-event'  # Change to your Kafka topic
+KAFKA_BROKER = '3.15.46.32:9092'  
+KAFKA_TOPIC = 'raw-event'  
 
 def send_to_kafka(producer, topic, message):
     producer.send(topic, value=message.encode('utf-8'))

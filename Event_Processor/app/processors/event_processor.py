@@ -121,6 +121,8 @@ class EventProcessor:
                     logger.info(f"Received message with event_id: {event_id}")
                     self.join_event_with_filter_rules_ktable(message.value)
     
+    
+
     def join_event_with_filter_rules_ktable(self, event_data: Dict[str, Any]):
         """Join stream event with KTable state"""
         try:
