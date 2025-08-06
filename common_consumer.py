@@ -11,7 +11,7 @@ from typing import Optional
 
 # Configuration - UPDATE THESE VALUES
 KAFKA_BROKER_IP = "3.20.237.63:9092"  
-TOPIC_NAME = "DQL-Topic"    
+TOPIC_NAME = "DLQ-Topic"    
 
 # Optional configuration
 CONSUMER_GROUP = "my-consumer-group"  # Consumer group ID
